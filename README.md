@@ -6,7 +6,7 @@ A focused CLI for managing your X/Twitter bookmarks from the terminal. No bloat 
 
 ```bash
 # Install
-pipx install git+https://github.com/thanhpham87/xbm-cli.git
+pipx install git+https://github.com/humanrouter/xbm-cli.git
 
 # Set up credentials (one-time)
 mkdir -p ~/.config/xbm
@@ -29,13 +29,13 @@ Requires Python 3.11+.
 
 ```bash
 # With pipx (recommended — installs globally, no venv needed)
-pipx install git+https://github.com/thanhpham87/xbm-cli.git
+pipx install git+https://github.com/humanrouter/xbm-cli.git
 
 # With uv
-uv tool install git+https://github.com/thanhpham87/xbm-cli.git
+uv tool install git+https://github.com/humanrouter/xbm-cli.git
 
 # From source
-git clone https://github.com/thanhpham87/xbm-cli.git
+git clone https://github.com/humanrouter/xbm-cli.git
 cd xbm-cli
 pipx install .
 ```
