@@ -123,12 +123,14 @@ xbm -p list | cut -f3       # Extract just the tweet text
 
 ## Date-Filtered Bookmarks
 
-The `--since` and `--until` options track when bookmarks were first seen locally. On first use, `xbm` syncs your bookmarks and records the date for each. Subsequent runs detect new additions.
+The `--since` and `--until` options filter by **when you bookmarked the tweet, not when the tweet was posted**. If you bookmark a tweet from last week today, `--since today` will include it because you added it today.
+
+On first use, `xbm` syncs your bookmarks and records today's date for each one. After that, it detects new additions and tags them with the date you bookmarked them.
 
 ```bash
-xbm list --since today               # What did I bookmark today?
-xbm list --since 2026-02-01          # Everything since Feb 1
-xbm -j list --since yesterday        # Yesterday's bookmarks as JSON
+xbm list --since today               # Bookmarks I added today
+xbm list --since 2026-02-01          # Everything I bookmarked since Feb 1
+xbm -j list --since yesterday        # What I bookmarked yesterday, as JSON
 ```
 
 State is stored in `~/.config/xbm/bookmark_state.json`.
