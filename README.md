@@ -167,6 +167,144 @@ State is stored in `~/.config/xbm/bookmark_state.json`.
 
 The JSON output mode (`-j`) is especially useful for Claude Code since it gives structured data that's easy to reason about and transform.
 
+### Turn xbm into a Claude Code Skill
+
+You can make `xbm` a reusable [skill](https://code.claude.com/docs/en/skills) so it's always available as a slash command. Create the skill file:
+
+```bash
+mkdir -p ~/.claude/skills/xbm
+cat > ~/.claude/skills/xbm/SKILL.md << 'SKILLEOF'
+---
+name: xbm
+description: Manage X/Twitter bookmarks — list, add, remove, summarize, and organize.
+user_invocable: true
+---
+
+You have access to the `xbm` CLI for managing X/Twitter bookmarks.
+
+## Available commands
+
+- `xbm list [--max N] [--since DATE] [--until DATE]` — List bookmarks
+- `xbm add <tweet_id_or_url>` — Bookmark a tweet
+- `xbm remove <tweet_id_or_url>` — Remove a bookmark
+- `xbm auth status` — Check login status
+
+## Output flags
+
+- `-j` for JSON (best for processing), `-p` for TSV, `-md` for Markdown, `-v` for verbose
+
+## Instructions
+
+When the user asks about their bookmarks, use the xbm CLI to fetch, analyze,
+or manage them. Default to `-j` (JSON) when you need to process the data, and
+human-readable output when the user just wants to see results.
+
+Always use `--max` to limit results when the user doesn't specify a count.
+SKILLEOF
+```
+
+Now you can type `/xbm` in any Claude Code session to activate bookmark management.
+
+## Automate with OpenClaw
+
+[OpenClaw](https://github.com/clawdbot/clawdbot) (formerly Clawdbot) is an open-source AI assistant that runs Claude on your machine with built-in automation. Combined with `xbm`, it turns your bookmarks into an automated productivity system — syncing, summarizing, and acting on saved tweets on a schedule.
+
+### Setup
+
+Make sure `xbm` is installed and authenticated (`xbm auth status` should show "Logged in"), then add xbm instructions to your OpenClaw system prompt or session config so the agent knows the tool is available.
+
+### Daily Bookmark Digest
+
+Get a summary of what you bookmarked each day, delivered to your chat every morning:
+
+```bash
+openclaw cron add \
+  --name "Bookmark digest" \
+  --cron "0 8 * * *" \
+  --tz "America/Chicago" \
+  --session isolated \
+  --message "Run xbm -j list --since yesterday. Summarize the bookmarks by topic, highlight the top 3 most interesting ones, and format as a morning briefing." \
+  --announce
+```
+
+### Weekly Reading List
+
+Compile a curated weekly reading list from your bookmarks every Sunday:
+
+```bash
+openclaw cron add \
+  --name "Weekly reading list" \
+  --cron "0 10 * * 0" \
+  --tz "America/Chicago" \
+  --session isolated \
+  --message "Run xbm -j list --since 7-days-ago. Categorize all bookmarks into topics (AI, business, tech, etc.), rank by engagement metrics, and produce a markdown reading list with brief summaries for each."
+```
+
+### Bookmark Cleanup
+
+Automatically review and prune stale bookmarks monthly:
+
+```bash
+openclaw cron add \
+  --name "Bookmark cleanup" \
+  --cron "0 9 1 * *" \
+  --tz "America/Chicago" \
+  --session isolated \
+  --message "Run xbm -j list --max 100. Identify bookmarks that are likely outdated (broken links, deleted tweets, or topics no longer relevant). List them and remove each one with xbm remove <id>. Report what was cleaned up."
+```
+
+### Research Monitoring
+
+Track bookmarks related to specific topics you're researching:
+
+```bash
+openclaw cron add \
+  --name "AI research tracker" \
+  --cron "0 18 * * *" \
+  --tz "America/Chicago" \
+  --session isolated \
+  --message "Run xbm -j list --since today. Filter for bookmarks about AI, LLMs, or machine learning. If any are found, summarize the key findings and save to ~/notes/ai-research-log.md, appending today's date as a header."
+```
+
+### Save Bookmarks to Notion / Obsidian / Files
+
+Export bookmarks on a schedule to your note-taking system:
+
+```bash
+openclaw cron add \
+  --name "Export bookmarks" \
+  --cron "0 22 * * *" \
+  --tz "America/Chicago" \
+  --session isolated \
+  --message "Run xbm -md list --since today. Append the output to ~/notes/bookmarks/$(date +%Y-%m).md with today's date as a section header."
+```
+
+### One-Shot Reminders
+
+Process bookmarks at a specific time — useful for "review this later" workflows:
+
+```bash
+# "Remind me to go through my bookmarks at 6pm"
+openclaw cron add \
+  --name "Bookmark review" \
+  --at "18:00" \
+  --session main \
+  --system-event "Time to review bookmarks. Run xbm list --since today and present them for review." \
+  --delete-after-run
+```
+
+### Why This Combo Works
+
+| What | How |
+|------|-----|
+| `xbm` gives structured data | `-j` outputs clean JSON that the agent can parse and act on |
+| OpenClaw runs autonomously | Cron jobs fire without you being at the terminal |
+| Agent can take action | Not just reading — it can `xbm remove`, write files, send messages |
+| Chat delivery | `--announce` sends results to WhatsApp, Telegram, Slack, etc. |
+| Isolated sessions | Each cron job runs in its own session, no interference |
+
+You're essentially turning your X bookmarks into an automated knowledge pipeline: bookmark interesting things throughout the day, and let OpenClaw + xbm handle the rest.
+
 ## Troubleshooting
 
 | Problem | Fix |
